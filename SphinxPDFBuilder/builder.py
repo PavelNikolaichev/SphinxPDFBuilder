@@ -49,25 +49,34 @@ class SphinxPDFBuilder:
 
         # Clone the repository directly inside the Docker container
         WORKDIR /home/dockeruser
-        RUN git clone {self.repo_url} ./docs
+
+        RUN git clone {self.repo_url} ./docs --depth 1
 
         WORKDIR /home/dockeruser/docs
 
-        # Install any documentation requirements
-        RUN [ -f ./docs/doc-requirements.txt ] && pip install -r ./docs/doc-requirements.txt
-
-        # Build the EPUB using Sphinx in /docs
-        # RUN cd ./docs && make epub
-        RUN sphinx-build -b epub ./docs/source ./docs/build/epub
+        # Install any requirements if they exist
+        RUN [-f ./pre-requirements.txt ] && pip install -r ./pre-requirements.txt || echo "No requirements file found"
+        RUN [ -f ./requirements.txt ] && pip install -r ./requirements.txt || echo "No requirements file found"
         
-        RUN ls ./docs/build/epub/
-        # Convert EPUB to PDF using calibre ebook-convert
-        RUN ebook-convert ./docs/build/epub/*.epub ./docs/build/epub/output.pdf
+        # Build the EPUB using Sphinx in /docs
+        # TODO: use LLM to choose the correct folder or stop the build if there are none
+
+        ARG FOLDER
+        RUN if test -d "/home/dockeruser/docs/docs"; then \
+                FOLDER="/home/dockeruser/docs/docs"; \
+            elif test -d "/home/dockeruser/docs/doc"; then \
+                FOLDER="/home/dockeruser/docs/doc"; \
+            else \
+                echo "Neither 'docs' nor 'doc' exists!" && exit 1; \
+            fi && \
+                ([ -f $FOLDER/doc-requirements.txt ] && pip install -r $FOLDER/doc-requirements.txt) || \
+                ([ -f $FOLDER/requirements.txt ] && pip install -r $FOLDER/requirements.txt) && \
+                test -d $FOLDER && cd $FOLDER && make epub && \
+                ebook-convert $FOLDER/_build/epub/*.epub $FOLDER/_build/epub/output.pdf && \
+                cp $FOLDER/_build/epub/output.pdf /home/dockeruser/output.pdf
 
         USER root
-        RUN cp ./docs/build/epub/output.pdf /output_pdf/output.pdf
-        CMD ["cp", "./docs/build/epub/output.pdf", "/output_pdf/output.pdf"]
-        RUN ls /output_pdf
+        CMD ["cp", "/home/dockeruser/output.pdf", "/output_pdf/output.pdf"]
         """
         dockerfile_path = os.path.join("./", "Dockerfile")
         with open(dockerfile_path, "w") as dockerfile:
@@ -93,7 +102,6 @@ class SphinxPDFBuilder:
         )
 
     def build(self):
-        # TODO: remove docker volume and images after completion
         self.fetch_github_repo_url()
         self.build_docker_container()
         self.run_docker_container()
@@ -102,10 +110,11 @@ class SphinxPDFBuilder:
 
         os.remove("Dockerfile")
 
+        subprocess.run(["docker", "rmi", "sphinx_pdf_builder"], check=True)
 
-# Usage
+
 if __name__ == "__main__":
-    index_url = "https://docs.jupyter.org/en/latest/"
+    index_url = "https://docs.djangoproject.com/en/5.1/"
     output_directory = "./output_pdf"
 
     if not os.path.exists(output_directory):
