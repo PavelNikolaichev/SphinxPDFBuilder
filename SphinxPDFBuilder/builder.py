@@ -42,6 +42,10 @@ class SphinxPDFBuilder:
             && apt-get clean \\
             && pip install sphinx
 
+        # Not sure why, but torch helps with converting graphics to PDF. Mb cuda or some of it's dependencies.
+        # UPDATE: it's not.
+        # RUN pip install torch torchvision torchaudio
+
         RUN mkdir /output_pdf
 
         RUN useradd -m dockeruser
