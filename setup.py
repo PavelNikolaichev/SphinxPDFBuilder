@@ -6,8 +6,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "requests",
-        "beautifulsoup4",
-        # Add other dependencies like docker-py if needed
+        "beautifulsoup4==4.10.0",
     ],
     entry_points={
         "console_scripts": [
@@ -15,8 +14,8 @@ setup(
         ],
     },
     author="Pavel Nikolaitchev, NYU RITS",
-    description="A library for fetching Sphinx documentation and building it into a PDF using Docker.",
-    # url="https://github.com/",
+    description="A small crappy library to fetch and build Sphinx documentation using docker containers.",
+    url="https://github.com/PavelNikolaichev/SphinxPDFBuilder",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

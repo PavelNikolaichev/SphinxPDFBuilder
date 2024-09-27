@@ -1,3 +1,2 @@
-GitPython==3.1.43
-requests==2.26.0
+requests
 beautifulsoup4==4.10.0

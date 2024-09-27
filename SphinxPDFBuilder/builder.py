@@ -1,4 +1,3 @@
-import utils
 import os
 import requests
 import subprocess
@@ -7,12 +6,22 @@ from bs4 import BeautifulSoup
 
 class SphinxPDFBuilder:
     def __init__(self, index_url, output_dir):
+        """
+        SphinxPDFBuilder class to fetch Sphinx documentation and build it into a PDF using Docker.
+
+        :param index_url: The URL of the Sphinx documentation index page.
+        :param output_dir: The directory where the PDF will be saved.
+        """
+
         self.index_url = index_url
         self.output_dir = output_dir
         self.repo_url = None
         self.repo_dir = "cloned_repo"
 
     def fetch_github_repo_url(self):
+        """
+        A function to fetch the GitHub repository URL from the documentation index page.
+        """
         response = requests.get(self.index_url)
         if response.status_code != 200:
             raise Exception(f"Failed to fetch documentation from {self.index_url}")
@@ -30,6 +39,9 @@ class SphinxPDFBuilder:
         print(f"GitHub Repo URL: {self.repo_url}")
 
     def build_docker_container(self):
+        """
+        A function to generate a Dockerfile and build a Docker container to build the PDF.
+        """
         dockerfile_content = f"""
         FROM python:3.9-slim
 
@@ -41,10 +53,6 @@ class SphinxPDFBuilder:
             make \\
             && apt-get clean \\
             && pip install sphinx
-
-        # Not sure why, but torch helps with converting graphics to PDF. Mb cuda or some of it's dependencies.
-        # UPDATE: it's not.
-        # RUN pip install torch torchvision torchaudio
 
         RUN mkdir /output_pdf
 
@@ -92,6 +100,10 @@ class SphinxPDFBuilder:
         )
 
     def run_docker_container(self):
+        """
+        A function to run the Docker container to build the PDF.
+        """
+
         print("Running Docker container to build PDF...")
         subprocess.run(
             [
@@ -106,6 +118,10 @@ class SphinxPDFBuilder:
         )
 
     def build(self):
+        """
+        Fetches the GitHub repository URL, builds the Docker container, and runs it to build the PDF.
+        """
+
         self.fetch_github_repo_url()
         self.build_docker_container()
         self.run_docker_container()
