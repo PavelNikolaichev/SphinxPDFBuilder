@@ -83,7 +83,7 @@ class SphinxPDFBuilder:
             fi && \
                 ([ -f $FOLDER/doc-requirements.txt ] && pip install -r $FOLDER/doc-requirements.txt) || \
                 ([ -f $FOLDER/requirements.txt ] && pip install -r $FOLDER/requirements.txt) && \
-                test -d $FOLDER && cd $FOLDER && make epub && \
+                test -d $FOLDER && cd $FOLDER && make epub BUILDDIR=./_build && \
                 ebook-convert $FOLDER/_build/epub/*.epub $FOLDER/_build/epub/output.pdf && \
                 cp $FOLDER/_build/epub/output.pdf /home/dockeruser/output.pdf
 
